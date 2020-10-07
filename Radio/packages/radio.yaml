@@ -1,0 +1,92 @@
+#Initial code and concept Bob_NL https://community.home-assistant.io/t/chromecast-radio-with-station-and-player-selection/12732/1
+#Converted into a package by wills106 https://community.home-assistant.io/t/chromecast-radio-with-station-and-player-selection/12732/419
+group:
+  Radio:
+    name: ChromeCast Radio
+    icon: mdi:radio
+    entities:
+    - input_select.chromecast_radio_station
+    - input_select.chromecast_radio_speakers
+    - input_number.volume_radio
+    - script.play_chromecast_radio
+    - script.stop_chromecast_radio
+
+input_select:
+
+  chromecast_radio_station:
+    name: 'Select Radio Station'
+    options:
+      - Radio 538
+      - Radio 538 Party
+      - Radio 538 Verrückte
+      - Qmusic
+      - Qmusic Foute uur
+      - Radio 10
+      - Radio 10 80s Hits
+      - Radio 10 90s Hits
+    icon: mdi:radio
+
+  chromecast_radio_speakers:
+    name: 'Select Speakers'
+    options:
+      - beneden
+      - boven
+      - thuis
+    initial: beneden
+    icon: mdi:speaker-wireless
+
+input_text:
+  custom_station:
+    name: Radio URL
+    icon: mdi:link-variant
+
+input_number:
+  volume_radio:
+    name: Volume
+    icon: mdi:volume-high
+    initial: 0.3
+    min: 0
+    max: 1
+    step: 0.05
+
+script:
+  play_chromecast_radio:
+    alias: Cast Selected Radio on Chromecast Speakers
+    sequence:
+      - service: media_player.volume_set
+        data_template:
+          entity_id: >
+            {% if is_state("input_select.chromecast_radio_speakers", "beneden") %} media_player.beneden
+            {% elif is_state("input_select.chromecast_radio_speakers", "boven") %} media_player.boven
+            {% elif is_state("input_select.chromecast_radio_speakers", "thuis") %} media_player.thuis
+            {% endif %}
+          volume_level: '{{  states.input_number.volume_radio.state  }}' 
+      - service: media_player.play_media
+        data_template:
+          entity_id: >
+            {% if is_state("input_select.chromecast_radio_speakers", "beneden") %} media_player.beneden
+            {% elif is_state("input_select.chromecast_radio_speakers", "boven") %} media_player.boven
+            {% elif is_state("input_select.chromecast_radio_speakers", "thuis") %} media_player.thuis
+            {% endif %}
+          media_content_id: >
+            {% if is_state("input_select.chromecast_radio_station", "Radio 538") %} https://21253.live.streamtheworld.com/RADIO538.mp3
+            {% elif is_state("input_select.chromecast_radio_station", "Radio 538 Party") %} https://21293.live.streamtheworld.com/TLPSTR16.mp3
+            {% elif is_state("input_select.chromecast_radio_station","Radio 538 Verrückte") %} https://21253.live.streamtheworld.com/TLPSTR21.mp3
+            {% elif is_state("input_select.chromecast_radio_station", "Qmusic") %} https://icecast-qmusicnl-cdp.triple-it.nl/Qmusic_nl_live_96.mp3
+            {% elif is_state("input_select.chromecast_radio_station", "Qmusic Foute uur") %} https://icecast-qmusicnl-cdp.triple-it.nl/Qmusic_nl_fouteuur_96.mp3
+            {% elif is_state("input_select.chromecast_radio_station", "Radio 10") %} http://19993.live.streamtheworld.com/RADIO10.mp3
+            {% elif is_state("input_select.chromecast_radio_station", "Radio 10 80s Hits") %} http://21253.live.streamtheworld.com/TLPSTR20.mp3
+            {% elif is_state("input_select.chromecast_radio_station", "Radio 10 90s Hits") %} https://20863.live.streamtheworld.com/TLPSTR22.mp3
+            {% endif %}
+          media_content_type: 'audio/mp4'
+  
+  stop_chromecast_radio:
+    alias: Stop Playing Radio on ChromeCast 
+    sequence:
+      - service: media_player.turn_off
+        data_template:
+          entity_id: >
+            {% if is_state("input_select.chromecast_radio_speakers", "beneden") %} media_player.beneden
+            {% elif is_state("input_select.chromecast_radio_speakers", "boven") %} media_player.boven
+            {% elif is_state("input_select.chromecast_radio_speakers", "thuis") %} media_player.thuis
+            {% endif %}
